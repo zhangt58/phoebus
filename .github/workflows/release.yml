@@ -143,7 +143,7 @@ jobs:
           --win-menu `
           --win-menu-group Phoebus `
           --win-shortcut `
-          --java-options -Dcom.sun.webkit.useHTTP2Loader=false
+          --java-options '-Dcom.sun.webkit.useHTTP2Loader=false'
       env:
         RELEASE_TAG: ${{ github.event.release.tag_name }}
     - name: Archive Windows installer
