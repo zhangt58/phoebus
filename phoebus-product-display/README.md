@@ -29,6 +29,7 @@ available from Maven Central.
 The distributable archive is written to `phoebus-product-display/target/` using
 the original product filename, `product-<version>.tar.gz`.
 
-When a GitHub Release is published, the release workflow also converts this
-archive into an unsigned, self-contained ARM64 macOS `Phoebus-<version>.pkg`
-installer with `jpackage` and attaches both files to the release.
+When a GitHub Release is published, the release workflow performs native builds
+and uses `jpackage` to create self-contained ARM64 macOS (`.pkg`), Windows x64
+(`.exe`), and Linux x64 (`.deb`) installers. The unsigned installers and the
+macOS product archive are attached to the release.

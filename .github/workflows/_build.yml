@@ -38,10 +38,12 @@ jobs:
       uses: ./.github/actions/setup-java
     - name: Install bundled dependencies
       if: ${{ inputs.maven-prepare-args != '' }}
+      shell: bash
       run: mvn --batch-mode $MAVEN_PREPARE_ARGS
       env:
         MAVEN_PREPARE_ARGS: ${{ inputs.maven-prepare-args }}
     - name: Build
+      shell: bash
       run: mvn --batch-mode $MAVEN_ARGS
       env:
         MAVEN_ARGS: ${{ inputs.maven-args }}
