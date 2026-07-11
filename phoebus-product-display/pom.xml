@@ -12,9 +12,9 @@
   <name>Phoebus Display Builder Product</name>
 
   <!--
-    Curated application product: only Display Builder and Display Runtime are
-    selected as applications. The display implementation brings in the plot
-    and 3D libraries required by its built-in widgets transitively.
+    Curated application product: Display Builder, Display Runtime, and the
+    Debug applications are selected. The display implementation brings in the
+    plot and 3D libraries required by its built-in widgets transitively.
   -->
   <dependencies>
     <dependency>
@@ -45,6 +45,31 @@
     <dependency>
       <groupId>org.phoebus</groupId>
       <artifactId>app-display-fonts</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.phoebus</groupId>
+      <artifactId>app-errlog</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.phoebus</groupId>
+      <artifactId>app-diag</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.phoebus</groupId>
+      <artifactId>app-perfmon</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.phoebus</groupId>
+      <artifactId>app-pvtable</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.phoebus</groupId>
+      <artifactId>app-pvtree</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

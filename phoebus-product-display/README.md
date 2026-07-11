@@ -1,9 +1,13 @@
 # Display Builder Product
 
-This curated Phoebus product selects only the Display Builder (`app-display-editor`)
-and Display Runtime (`app-display-runtime`) applications. It also includes the
-launcher, display fonts, and Channel Access/PV Access providers needed for normal
-display operation.
+This curated Phoebus product selects the Display Builder (`app-display-editor`),
+Display Runtime (`app-display-runtime`), and all Debug applications from the full
+product: Diagnostics and Formula Tree (`app-diag`), Error Log (`app-errlog`), and
+Performance Monitor (`app-perfmon`). Debug tools supplied directly by `core-ui`,
+such as Jobs, PV List, and Freeze UI, are included transitively. The product also
+includes the launcher, display fonts, and Channel Access/PV Access providers needed
+for normal display operation. PV Table (`app-pvtable`) and PV Tree (`app-pvtree`)
+are included as additional process-variable display applications.
 
 Some non-application libraries from Data Browser and 3D Viewer remain transitive
 requirements of the built-in Display Builder widget representations. Other Phoebus
