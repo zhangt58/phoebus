@@ -75,6 +75,8 @@
   </dependencies>
 
   <build>
+    <!-- Keep release asset names compatible with the original Phoebus product. -->
+    <finalName>product-${project.version}</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

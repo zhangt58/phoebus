@@ -26,4 +26,5 @@ The first command installs repository-bundled dependencies, such as
 required transitively by the built-in Data Browser display widgets and are not
 available from Maven Central.
 
-The distributable archive is written to `phoebus-product-display/target/`.
+The distributable archive is written to `phoebus-product-display/target/` using
+the original product filename, `product-<version>.tar.gz`.
