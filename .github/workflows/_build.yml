@@ -11,6 +11,14 @@ on:
         description: Upload the product tarball/zip (used by the master build).
         type: boolean
         default: false
+      maven-args:
+        description: Maven goals and options used to build the product.
+        type: string
+        default: install -DskipTests
+      product-directory:
+        description: Directory containing the product build output.
+        type: string
+        default: phoebus-product
 
 permissions:
   contents: read
@@ -25,12 +33,15 @@ jobs:
     - name: Set up Java
       uses: ./.github/actions/setup-java
     - name: Build
-      run: mvn --batch-mode install -DskipTests
+      run: mvn --batch-mode $MAVEN_ARGS
+      env:
+        MAVEN_ARGS: ${{ inputs.maven-args }}
     - name: Archive build artifacts
       if: ${{ inputs.upload-artifacts }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
       with:
         name: Phoebus product ${{ inputs.os }}
+        if-no-files-found: error
         path: |
-          ${{ github.workspace }}/phoebus-product/target/*.tar.gz
-          ${{ github.workspace }}/phoebus-product/target/*.zip
+          ${{ github.workspace }}/${{ inputs.product-directory }}/target/*.tar.gz
+          ${{ github.workspace }}/${{ inputs.product-directory }}/target/*.zip

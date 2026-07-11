@@ -463,6 +463,7 @@
     <module>core</module>
     <module>app</module>
     <module>phoebus-product</module>
+    <module>phoebus-product-display</module>
     <module>services</module>
   </modules>
 </project>

@@ -14,6 +14,8 @@ jobs:
     with:
       os: macos-15
       upload-artifacts: true
+      maven-args: install -DskipTests -Djavafx.platform=mac-aarch64 -pl phoebus-product-display -am
+      product-directory: phoebus-product-display
 
   release:
     needs: build
