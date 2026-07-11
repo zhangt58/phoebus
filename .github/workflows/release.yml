@@ -71,6 +71,18 @@ jobs:
         fi
         product_dir="$(dirname "$main_jar")"
 
+        icon_source="core/ui/src/main/resources/icons/phoebus-logo.png"
+        iconset="Phoebus.iconset"
+        mkdir "$iconset"
+        for size in 16 32 128 256 512; do
+          sips --resampleHeightWidthMax "$size" "$icon_source" --out "$iconset/icon_${size}x${size}.png" >/dev/null
+          sips --padToHeightWidth "$size" "$size" --padColor FFFFFF "$iconset/icon_${size}x${size}.png" >/dev/null
+          double_size=$((size * 2))
+          sips --resampleHeightWidthMax "$double_size" "$icon_source" --out "$iconset/icon_${size}x${size}@2x.png" >/dev/null
+          sips --padToHeightWidth "$double_size" "$double_size" --padColor FFFFFF "$iconset/icon_${size}x${size}@2x.png" >/dev/null
+        done
+        iconutil --convert icns "$iconset" --output Phoebus.icns
+
         version="${RELEASE_TAG#v}"
         version="${version%%-*}"
         if [[ ! "$version" =~ ^[0-9]+([.][0-9]+){0,2}$ ]]; then
@@ -83,6 +95,7 @@ jobs:
           --app-version "$version" \
           --input "$product_dir" \
           --main-jar "$(basename "$main_jar")" \
+          --icon Phoebus.icns \
           --dest package \
           --mac-package-identifier org.phoebus.product \
           --java-options -Dprism.lcdtext=false \
@@ -127,6 +140,27 @@ jobs:
           throw "No product JAR found in $($archive.FullName)"
         }
 
+        Add-Type -AssemblyName System.Drawing
+        $sourceIcon = [System.Drawing.Image]::FromFile(
+          (Resolve-Path 'core/ui/src/main/resources/icons/phoebus-logo.png')
+        )
+        $iconBitmap = New-Object System.Drawing.Bitmap 256, 256
+        $graphics = [System.Drawing.Graphics]::FromImage($iconBitmap)
+        $graphics.Clear([System.Drawing.Color]::White)
+        $scale = [Math]::Min(256 / $sourceIcon.Width, 256 / $sourceIcon.Height)
+        $width = [int]($sourceIcon.Width * $scale)
+        $height = [int]($sourceIcon.Height * $scale)
+        $graphics.DrawImage($sourceIcon, [int]((256 - $width) / 2), [int]((256 - $height) / 2), $width, $height)
+        $icon = [System.Drawing.Icon]::FromHandle($iconBitmap.GetHicon())
+        $iconStream = [System.IO.File]::Create((Join-Path $PWD 'Phoebus.ico'))
+        $icon.Save($iconStream)
+        $iconStream.Dispose()
+        $icon.Dispose()
+        $graphics.Dispose()
+        $iconBitmap.Dispose()
+        $sourceIcon.Dispose()
+        $iconPath = Join-Path $PWD 'Phoebus.ico'
+
         $version = $env:RELEASE_TAG -replace '^v', ''
         $version = $version.Split('-')[0]
         if ($version -notmatch '^\d+(\.\d+){0,2}$') {
@@ -139,6 +173,7 @@ jobs:
           --app-version $version `
           --input $mainJar.DirectoryName `
           --main-jar $mainJar.Name `
+          --icon $iconPath `
           --dest package `
           --win-menu `
           --win-menu-group Phoebus `
@@ -199,6 +234,7 @@ jobs:
           --app-version "$version" \
           --input "$product_dir" \
           --main-jar "$(basename "$main_jar")" \
+          --icon core/ui/src/main/resources/icons/phoebus-logo.png \
           --dest package \
           --linux-package-name phoebus \
           --linux-menu-group Science \
