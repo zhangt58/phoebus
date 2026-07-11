@@ -37,9 +37,21 @@ jobs:
       run: |
         test "$(uname -m)" = arm64
         mkdir app-input package
-        tar -xzf "$(find dist -type f -name '*.tar.gz' -print -quit)" -C app-input
-        main_jar="$(find app-input -maxdepth 1 -type f -name 'product-*.jar' -print -quit)"
-        test -n "$main_jar"
+        archive="$(find dist -type f -name '*.tar.gz' -print -quit)"
+        if [[ -z "$archive" ]]; then
+          echo "No product archive found under dist" >&2
+          find dist -type f -print
+          exit 1
+        fi
+        tar -xzf "$archive" -C app-input
+
+        main_jar="$(find app-input -type f -name 'product-*.jar' -print -quit)"
+        if [[ -z "$main_jar" ]]; then
+          echo "No product JAR found in $archive" >&2
+          find app-input -type f -print
+          exit 1
+        fi
+        product_dir="$(dirname "$main_jar")"
 
         version="${RELEASE_TAG#v}"
         version="${version%%-*}"
@@ -51,7 +63,7 @@ jobs:
           --type pkg \
           --name Phoebus \
           --app-version "$version" \
-          --input app-input \
+          --input "$product_dir" \
           --main-jar "$(basename "$main_jar")" \
           --dest package \
           --mac-package-identifier org.phoebus.product \
