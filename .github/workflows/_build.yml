@@ -15,6 +15,10 @@ on:
         description: Maven goals and options used to build the product.
         type: string
         default: install -DskipTests
+      maven-prepare-args:
+        description: Optional Maven goals and options used to install bundled dependencies before the build.
+        type: string
+        default: ''
       product-directory:
         description: Directory containing the product build output.
         type: string
@@ -32,6 +36,11 @@ jobs:
         persist-credentials: false
     - name: Set up Java
       uses: ./.github/actions/setup-java
+    - name: Install bundled dependencies
+      if: ${{ inputs.maven-prepare-args != '' }}
+      run: mvn --batch-mode $MAVEN_PREPARE_ARGS
+      env:
+        MAVEN_PREPARE_ARGS: ${{ inputs.maven-prepare-args }}
     - name: Build
       run: mvn --batch-mode $MAVEN_ARGS
       env:

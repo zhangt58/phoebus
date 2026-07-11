@@ -14,6 +14,7 @@ jobs:
     with:
       os: macos-15
       upload-artifacts: true
+      maven-prepare-args: install -DskipTests -f dependencies/install-jars/pom.xml
       maven-args: install -DskipTests -Djavafx.platform=mac-aarch64 -pl phoebus-product-display -am
       product-directory: phoebus-product-display
 
