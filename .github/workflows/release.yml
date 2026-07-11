@@ -1,24 +1,34 @@
-name: Release
+name: Build and publish macOS aarch64 release
 
 on:
-  push:
-    tags:
-      - '**'
+  release:
+    types:
+      - published
 
 permissions:
   contents: read
 
 jobs:
-  docker-image:
-    permissions:
-      contents: read
-      packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        service: [alarm-server, alarm-logger, save-and-restore, scan-server]
-    uses: ./.github/workflows/_docker-image.yml
+  build:
+    uses: ./.github/workflows/_build.yml
     with:
-      image-suffix: service-${{ matrix.service }}
-      context: services/${{ matrix.service }}
-      maven-args: ${{ matrix.service == 'scan-server' && '-Pexecutable-jar --update-snapshots package' || '--update-snapshots package' }}
+      os: macos-15
+      upload-artifacts: true
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      with:
+        pattern: Phoebus product macos-15
+        path: dist
+    - name: Upload assets to GitHub Release
+      run: find dist -type f \( -name '*.zip' -o -name '*.tar.gz' \) -exec gh release upload "$RELEASE_TAG" '{}' --clobber \;
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        RELEASE_TAG: ${{ github.event.release.tag_name }}
