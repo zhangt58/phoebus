@@ -18,8 +18,58 @@ jobs:
       maven-args: install -DskipTests -Djavafx.platform=mac-aarch64 -pl phoebus-product-display -am
       product-directory: phoebus-product-display
 
-  release:
+  package:
     needs: build
+    runs-on: macos-15
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      with:
+        persist-credentials: false
+    - name: Set up Java
+      uses: ./.github/actions/setup-java
+    - name: Download product archive
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+      with:
+        pattern: Phoebus product macos-15
+        path: dist
+    - name: Create macOS package
+      shell: bash
+      run: |
+        test "$(uname -m)" = arm64
+        mkdir app-input package
+        tar -xzf "$(find dist -type f -name '*.tar.gz' -print -quit)" -C app-input
+        main_jar="$(find app-input -maxdepth 1 -type f -name 'product-*.jar' -print -quit)"
+        test -n "$main_jar"
+
+        version="${RELEASE_TAG#v}"
+        version="${version%%-*}"
+        if [[ ! "$version" =~ ^[0-9]+([.][0-9]+){0,2}$ ]]; then
+          version=1.0.0
+        fi
+
+        jpackage \
+          --type pkg \
+          --name Phoebus \
+          --app-version "$version" \
+          --input app-input \
+          --main-jar "$(basename "$main_jar")" \
+          --dest package \
+          --mac-package-identifier org.phoebus.product \
+          --java-options -Dprism.lcdtext=false \
+          --java-options -Dcom.sun.webkit.useHTTP2Loader=false
+      env:
+        RELEASE_TAG: ${{ github.event.release.tag_name }}
+    - name: Archive macOS package
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      with:
+        name: Phoebus package macos-15
+        path: package/*.pkg
+        if-no-files-found: error
+
+  release:
+    needs:
+      - build
+      - package
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -27,10 +77,10 @@ jobs:
     - name: Download build artifacts
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
       with:
-        pattern: Phoebus product macos-15
+        pattern: Phoebus * macos-15
         path: dist
     - name: Upload assets to GitHub Release
-      run: find dist -type f \( -name '*.zip' -o -name '*.tar.gz' \) -exec gh release upload "$RELEASE_TAG" '{}' --clobber \;
+      run: find dist -type f \( -name '*.zip' -o -name '*.tar.gz' -o -name '*.pkg' \) -exec gh release upload "$RELEASE_TAG" '{}' --clobber \;
       env:
         GH_TOKEN: ${{ github.token }}
         GH_REPO: ${{ github.repository }}
