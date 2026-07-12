@@ -17,11 +17,13 @@ import org.csstudio.display.builder.model.util.ModelThreadPool;
 import org.csstudio.display.builder.model.widgets.PlaceholderWidget;
 import org.csstudio.display.builder.representation.spi.WidgetRepresentationsService;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -75,6 +77,12 @@ abstract public class ToolkitRepresentation<TWP extends Object, TW> implements E
     private final boolean edit_mode;
 
     private final RepresentationUpdateThrottle throttle = RepresentationUpdateThrottle.getInstance(this);
+
+    /** Representation updates deferred while this toolkit is hidden. */
+    private final Set<WidgetRepresentation<?, ?, ?>> deferred_updates = new LinkedHashSet<>();
+
+    /** Are representation updates for this toolkit currently enabled? */
+    private volatile boolean updates_enabled = true;
 
     /**
      * Listener list
@@ -445,6 +453,19 @@ abstract public class ToolkitRepresentation<TWP extends Object, TW> implements E
      * @param representation Toolkit representation that requests update
      */
     public void scheduleUpdate(final WidgetRepresentation<TWP, TW, ? extends Widget> representation) {
+        deferUpdate(representation);
+    }
+
+    /** Queue now or retain one deferred update while this toolkit is hidden. */
+    void deferUpdate(final WidgetRepresentation<?, ?, ?> representation) {
+        synchronized (deferred_updates)
+        {
+            if (!updates_enabled)
+            {
+                deferred_updates.add(representation);
+                return;
+            }
+        }
         throttle.scheduleUpdate(representation);
     }
 
@@ -452,7 +473,24 @@ abstract public class ToolkitRepresentation<TWP extends Object, TW> implements E
      * @param enable Enable updates, or pause?
      */
     public void enable(final boolean enable) {
-        throttle.enable(enable);
+        final WidgetRepresentation<?, ?, ?>[] pending;
+        synchronized (deferred_updates)
+        {
+            if (updates_enabled == enable)
+                return;
+            updates_enabled = enable;
+            if (!enable || deferred_updates.isEmpty())
+                return;
+            pending = deferred_updates.toArray(new WidgetRepresentation[deferred_updates.size()]);
+            deferred_updates.clear();
+        }
+        for (final WidgetRepresentation<?, ?, ?> representation : pending)
+            throttle.scheduleUpdate(representation);
+    }
+
+    /** @return whether representation updates are currently enabled */
+    boolean areUpdatesEnabled() {
+        return updates_enabled;
     }
 
     /**
@@ -714,6 +752,10 @@ abstract public class ToolkitRepresentation<TWP extends Object, TW> implements E
      * Orderly shutdown
      */
     public void shutdown() {
+        synchronized (deferred_updates)
+        {
+            deferred_updates.clear();
+        }
         throttle.shutdown();
     }
 }

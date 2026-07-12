@@ -22,6 +22,9 @@ public class Preferences
                       update_accumulation_time, update_delay, plot_update_delay, image_update_delay,
                       tooltip_length, embedded_timeout;
 
+    /** Suspend representation updates for hidden Display Builder tabs/windows. */
+    @Preference public static boolean visibility_aware_rendering;
+
     static
     {
     	AnnotatedPreferences.initialize(Preferences.class, "/display_representation_preferences.properties");

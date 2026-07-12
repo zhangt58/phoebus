@@ -21,6 +21,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.FutureTask;
 import java.util.logging.Level;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.value.ChangeListener;
+import javafx.scene.Scene;
 import javafx.stage.Window;
 import org.csstudio.display.builder.model.DisplayModel;
 import org.csstudio.display.builder.model.Preferences;
@@ -102,6 +105,16 @@ public class DisplayRuntimeInstance implements AppInstance
 
     private Boolean auto_size_stage = false;
 
+    /** Window currently containing this dock item's content. */
+    private Window visibility_window;
+
+    /** Re-evaluate whether representation work should run. */
+    private final InvalidationListener visibility_listener = observable -> updateRepresentationVisibility();
+
+    /** Track window changes when a dock item is moved between stages. */
+    private final ChangeListener<Scene> scene_listener = (observable, old_scene, new_scene) ->
+        updateVisibilityWindow(new_scene == null ? null : new_scene.getWindow());
+
     public String getDisplayName() {
         return active_model.getDisplayName();
     }
@@ -172,6 +185,8 @@ public class DisplayRuntimeInstance implements AppInstance
         dock_item = new DockItemWithInput(this, layout, null, null, null);
         dock_pane.addTab(dock_item);
 
+        installVisibilityAwareRendering();
+
         representation.getModelParent().getProperties().put(MODEL_PARENT_DISPLAY_RUNTIME, this);
 
         // since the model parent is now a Group, which takes on the bounds of its children,
@@ -191,6 +206,62 @@ public class DisplayRuntimeInstance implements AppInstance
         layout.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeys);
 
         dock_item.addClosedNotification(this::onClosed);
+    }
+
+    /** Enable rendering only while this display is selected in a visible window. */
+    private void installVisibilityAwareRendering()
+    {
+        if (!org.csstudio.display.builder.representation.Preferences.visibility_aware_rendering)
+            return;
+
+        dock_item.selectedProperty().addListener(visibility_listener);
+        layout.sceneProperty().addListener(scene_listener);
+        final Scene scene = layout.getScene();
+        updateVisibilityWindow(scene == null ? null : scene.getWindow());
+        updateRepresentationVisibility();
+    }
+
+    /** Replace listeners on the containing window after docking/undocking. */
+    private void updateVisibilityWindow(final Window window)
+    {
+        if (visibility_window == window)
+            return;
+        if (visibility_window != null)
+        {
+            visibility_window.showingProperty().removeListener(visibility_listener);
+            if (visibility_window instanceof Stage)
+                ((Stage) visibility_window).iconifiedProperty().removeListener(visibility_listener);
+        }
+        visibility_window = window;
+        if (visibility_window != null)
+        {
+            visibility_window.showingProperty().addListener(visibility_listener);
+            if (visibility_window instanceof Stage)
+                ((Stage) visibility_window).iconifiedProperty().addListener(visibility_listener);
+        }
+        updateRepresentationVisibility();
+    }
+
+    /** Pause only UI representation work; runtime/PV processing remains active. */
+    private void updateRepresentationVisibility()
+    {
+        if (!org.csstudio.display.builder.representation.Preferences.visibility_aware_rendering)
+            return;
+        final boolean visible = dock_item.isSelected() &&
+                                visibility_window != null &&
+                                visibility_window.isShowing() &&
+                                (!(visibility_window instanceof Stage) || !((Stage) visibility_window).isIconified());
+        representation.enable(visible);
+    }
+
+    /** Remove visibility listeners when the dock item closes. */
+    private void uninstallVisibilityAwareRendering()
+    {
+        if (!org.csstudio.display.builder.representation.Preferences.visibility_aware_rendering)
+            return;
+        dock_item.selectedProperty().removeListener(visibility_listener);
+        layout.sceneProperty().removeListener(scene_listener);
+        updateVisibilityWindow(null);
     }
 
     @Override
@@ -569,6 +640,7 @@ public class DisplayRuntimeInstance implements AppInstance
     /** DockItem closed */
     public void onClosed()
     {
+        uninstallVisibilityAwareRendering();
         // Stop runtime, dispose widgets for the model
         disposeModel();
         // Stop representation, so no more widgets can be created in this dock item

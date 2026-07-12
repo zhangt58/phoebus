@@ -62,9 +62,6 @@ public class RepresentationUpdateThrottle
     /** Thread that performs the throttling */
     private final Thread throttle_thread;
 
-    /** Flag that informs throttle_thread to enable updates or ignore */
-    protected volatile boolean enabled = true;
-
     /** Flag that informs throttle_thread to run or exit */
     protected volatile boolean run = true;
 
@@ -119,16 +116,6 @@ public class RepresentationUpdateThrottle
         }
     }
 
-    /** @param enable Enable updates, or pause? */
-    public void enable(final boolean enable)
-    {
-        enabled = enable;
-        synchronized (updateable)
-        {
-            updateable.notifyAll();
-        }
-    }
-
     private void doRun()
     {
         // Running average of update duration, i.e. time spend in UI thread
@@ -150,8 +137,6 @@ public class RepresentationUpdateThrottle
                     return;
                 // Wait a little longer to allow more updates to accumulate
                 Thread.sleep(update_accumulation_time);
-                if (! enabled)
-                    continue;
                 // Obtain safe copy, clear what had been accumulated
                 final WidgetRepresentation<?, ?, ?>[] representations;
                 synchronized (updateable)
@@ -219,6 +204,14 @@ public class RepresentationUpdateThrottle
             {
                 if (! run)
                     break;
+                // The update may have reached the UI queue just before its
+                // display was hidden. Defer it in that display's toolkit and
+                // replay the coalesced latest state when visibility returns.
+                if (representation.toolkit != null && !representation.toolkit.areUpdatesEnabled())
+                {
+                    representation.toolkit.deferUpdate(representation);
+                    continue;
+                }
                 try
                 {
                     // Skip updates when representation has been disposed
