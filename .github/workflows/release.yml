@@ -15,8 +15,8 @@ jobs:
       os: macos-15
       upload-artifacts: true
       maven-prepare-args: install -DskipTests -f dependencies/install-jars/pom.xml
-      maven-args: install -DskipTests -Djavafx.platform=mac-aarch64 -pl phoebus-product-display -am
-      product-directory: phoebus-product-display
+      maven-args: install -DskipTests -Djavafx.platform=mac-aarch64 -pl phoebus-product-lite -am
+      product-directory: phoebus-product-lite
 
   build-windows:
     uses: ./.github/workflows/_build.yml
@@ -24,8 +24,8 @@ jobs:
       os: windows-2022
       upload-artifacts: true
       maven-prepare-args: install -DskipTests -f dependencies/install-jars/pom.xml
-      maven-args: install -DskipTests -Djavafx.platform=win -pl phoebus-product-display -am
-      product-directory: phoebus-product-display
+      maven-args: install -DskipTests -Djavafx.platform=win -pl phoebus-product-lite -am
+      product-directory: phoebus-product-lite
 
   build-linux:
     uses: ./.github/workflows/_build.yml
@@ -33,8 +33,8 @@ jobs:
       os: ubuntu-24.04
       upload-artifacts: true
       maven-prepare-args: install -DskipTests -f dependencies/install-jars/pom.xml
-      maven-args: install -DskipTests -Djavafx.platform=linux -pl phoebus-product-display -am
-      product-directory: phoebus-product-display
+      maven-args: install -DskipTests -Djavafx.platform=linux -pl phoebus-product-lite -am
+      product-directory: phoebus-product-lite
 
   package-macos:
     needs: build-macos

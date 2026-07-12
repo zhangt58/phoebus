@@ -1,4 +1,4 @@
-# Display Builder Product
+# Phoebus Lite Product
 
 This curated Phoebus product selects the Display Builder (`app-display-editor`),
 Display Runtime (`app-display-runtime`), and all Debug applications from the full
@@ -18,7 +18,7 @@ Build the product and only its reactor dependencies with:
 ```sh
 mvn install -DskipTests -f dependencies/install-jars/pom.xml
 mvn install -DskipTests -Djavafx.platform=mac-aarch64 \
-  -pl phoebus-product-display -am
+  -pl phoebus-product-lite -am
 ```
 
 The first command installs repository-bundled dependencies, such as
@@ -26,7 +26,7 @@ The first command installs repository-bundled dependencies, such as
 required transitively by the built-in Data Browser display widgets and are not
 available from Maven Central.
 
-The distributable archive is written to `phoebus-product-display/target/` using
+The distributable archive is written to `phoebus-product-lite/target/` using
 the original product filename, `product-<version>.tar.gz`.
 
 When a GitHub Release is published, the release workflow performs native builds
