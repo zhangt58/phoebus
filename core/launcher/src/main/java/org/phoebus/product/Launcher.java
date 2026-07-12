@@ -203,6 +203,15 @@ public class Launcher {
             return;
         }
 
+        // User settings are loaded last so they can override both settings
+        // bundled with the installation and any command-line settings.
+        final File user_settings = new File(Locations.user(), "settings.ini");
+        if (user_settings.canRead())
+        {
+            logger.info("Loading user settings from " + user_settings.getAbsolutePath());
+            PropertyPreferenceLoader.load(new FileInputStream(user_settings));
+        }
+
         logger.info("Phoebus (PID " + ProcessHandle.current().pid() + ")");
 
         // Check for an existing instance

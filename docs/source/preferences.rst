@@ -84,6 +84,19 @@ product as detailed below.
 This way, new users do not need to remember any command line settings
 because they are applied in the launcher script or bundled into the product.
 
+Finally, Phoebus checks the user location for ``settings.ini``. By default this
+is ``~/.phoebus/settings.ini``. This user settings file is loaded after the
+installation file and all ``-settings ..`` command line files, so its values
+have the highest priority.
+
+The complete settings precedence, from lowest to highest, is:
+
+1. Application defaults from ``*preferences.properties``.
+2. ``settings.ini`` in the Phoebus installation location.
+3. Files supplied with ``-settings ..``, in command line order.
+4. ``settings.ini`` in the Phoebus user location, normally
+   ``~/.phoebus/settings.ini``.
+
 Conceptually, preference settings are meant to hold critical configuration
 parameters like the control system network configuration.
 They are configured by system administrators, and once they are properly adjusted
