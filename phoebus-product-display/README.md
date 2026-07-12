@@ -31,5 +31,7 @@ the original product filename, `product-<version>.tar.gz`.
 
 When a GitHub Release is published, the release workflow performs native builds
 and uses `jpackage` to create self-contained ARM64 macOS (`.pkg`), Windows x64
-(`.exe`), and Linux x64 (`.deb`) installers. The unsigned installers and the
-macOS product archive are attached to the release.
+(`.exe`), and Linux x64 (`.deb`) installers named `CS-Studio`. Each installed
+application uses `core/ui/src/main/resources/icons/phoebus-logo.png` as its app
+and installer icon; the workflow converts it to `.icns` and `.ico` where required.
+The unsigned installers and the macOS product archive are attached to the release.

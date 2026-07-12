@@ -72,7 +72,7 @@ jobs:
         product_dir="$(dirname "$main_jar")"
 
         icon_source="core/ui/src/main/resources/icons/phoebus-logo.png"
-        iconset="Phoebus.iconset"
+        iconset="CS-Studio.iconset"
         mkdir "$iconset"
         for size in 16 32 128 256 512; do
           sips --resampleHeightWidthMax "$size" "$icon_source" --out "$iconset/icon_${size}x${size}.png" >/dev/null
@@ -81,7 +81,7 @@ jobs:
           sips --resampleHeightWidthMax "$double_size" "$icon_source" --out "$iconset/icon_${size}x${size}@2x.png" >/dev/null
           sips --padToHeightWidth "$double_size" "$double_size" --padColor FFFFFF "$iconset/icon_${size}x${size}@2x.png" >/dev/null
         done
-        iconutil --convert icns "$iconset" --output Phoebus.icns
+        iconutil --convert icns "$iconset" --output CS-Studio.icns
 
         version="${RELEASE_TAG#v}"
         version="${version%%-*}"
@@ -91,13 +91,13 @@ jobs:
 
         jpackage \
           --type pkg \
-          --name Phoebus \
+          --name CS-Studio \
           --app-version "$version" \
           --input "$product_dir" \
           --main-jar "$(basename "$main_jar")" \
-          --icon Phoebus.icns \
+          --icon CS-Studio.icns \
           --dest package \
-          --mac-package-identifier org.phoebus.product \
+          --mac-package-identifier org.phoebus.csstudio \
           --java-options -Dprism.lcdtext=false \
           --java-options -Dcom.sun.webkit.useHTTP2Loader=false
       env:
@@ -105,7 +105,7 @@ jobs:
     - name: Archive macOS package
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
       with:
-        name: Phoebus package macos-15
+        name: CS-Studio package macos-15
         path: package/*.pkg
         if-no-files-found: error
 
@@ -152,14 +152,14 @@ jobs:
         $height = [int]($sourceIcon.Height * $scale)
         $graphics.DrawImage($sourceIcon, [int]((256 - $width) / 2), [int]((256 - $height) / 2), $width, $height)
         $icon = [System.Drawing.Icon]::FromHandle($iconBitmap.GetHicon())
-        $iconStream = [System.IO.File]::Create((Join-Path $PWD 'Phoebus.ico'))
+        $iconStream = [System.IO.File]::Create((Join-Path $PWD 'CS-Studio.ico'))
         $icon.Save($iconStream)
         $iconStream.Dispose()
         $icon.Dispose()
         $graphics.Dispose()
         $iconBitmap.Dispose()
         $sourceIcon.Dispose()
-        $iconPath = Join-Path $PWD 'Phoebus.ico'
+        $iconPath = Join-Path $PWD 'CS-Studio.ico'
 
         $version = $env:RELEASE_TAG -replace '^v', ''
         $version = $version.Split('-')[0]
@@ -169,14 +169,14 @@ jobs:
 
         jpackage `
           --type exe `
-          --name Phoebus `
+          --name CS-Studio `
           --app-version $version `
           --input $mainJar.DirectoryName `
           --main-jar $mainJar.Name `
           --icon $iconPath `
           --dest package `
           --win-menu `
-          --win-menu-group Phoebus `
+          --win-menu-group CS-Studio `
           --win-shortcut `
           --java-options '-Dcom.sun.webkit.useHTTP2Loader=false'
       env:
@@ -184,7 +184,7 @@ jobs:
     - name: Archive Windows installer
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
       with:
-        name: Phoebus package windows-2022
+        name: CS-Studio package windows-2022
         path: package/*.exe
         if-no-files-found: error
 
@@ -230,22 +230,25 @@ jobs:
 
         jpackage \
           --type deb \
-          --name Phoebus \
+          --name CS-Studio \
           --app-version "$version" \
           --input "$product_dir" \
           --main-jar "$(basename "$main_jar")" \
           --icon core/ui/src/main/resources/icons/phoebus-logo.png \
           --dest package \
-          --linux-package-name phoebus \
+          --linux-package-name cs-studio \
           --linux-menu-group Science \
           --linux-shortcut \
           --java-options -Dcom.sun.webkit.useHTTP2Loader=false
+        deb="$(find package -type f -name '*.deb' -print -quit)"
+        test -n "$deb"
+        mv "$deb" "package/CS-Studio-${version}.deb"
       env:
         RELEASE_TAG: ${{ github.event.release.tag_name }}
     - name: Archive Debian package
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
       with:
-        name: Phoebus package ubuntu-24.04
+        name: CS-Studio package ubuntu-24.04
         path: package/*.deb
         if-no-files-found: error
 
@@ -266,7 +269,7 @@ jobs:
     - name: Download native installers
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
       with:
-        pattern: Phoebus package *
+        pattern: CS-Studio package *
         path: dist
     - name: Upload assets to GitHub Release
       run: find dist -type f \( -name '*.tar.gz' -o -name '*.pkg' -o -name '*.exe' -o -name '*.deb' \) -exec gh release upload "$RELEASE_TAG" '{}' --clobber \;
